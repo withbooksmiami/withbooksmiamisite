@@ -1,0 +1,975 @@
+<!-- WITH BOOKS DATING SERVICE — prototype -->
+<!-- All copy, questions, tree names, and pricing live in the CONFIG object below. -->
+<!-- Edit CONFIG to change content — the layout/behavior will update automatically. -->
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Newsreader:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  #wbds-root {
+    --ink: #22281f;
+    --ink-soft: #4d5643;
+    --ink-faint: #85907a;
+    --paper: #e8e0c8;
+    --paper-deep: #ddd2ae;
+    --paper-line: rgba(34,40,31,0.16);
+    --rose: #b8465b;
+    --rose-deep: #8a3346;
+    --gold: #a9822f;
+    --cream-white: #f6f1e2;
+
+    --font-display: Consolas, 'JetBrains Mono', 'SFMono-Regular', Menlo, Monaco, monospace;
+    --font-body: 'Newsreader', Georgia, serif;
+    --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+    all: initial;
+    display: block;
+    font-family: var(--font-body);
+    color: var(--ink);
+    background: var(--paper);
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(34,40,31,0.05) 1px, transparent 0);
+    background-size: 14px 14px;
+    min-height: 100%;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0;
+    position: relative;
+  }
+  #wbds-root *, #wbds-root *::before, #wbds-root *::after { box-sizing: border-box; }
+  #wbds-root ::selection { background: var(--rose); color: var(--cream-white); }
+
+  #wbds-root .wbds-shell {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+
+  /* ---------- Header / masthead ---------- */
+  #wbds-root .wbds-masthead {
+    text-align: center;
+    padding: 20px 0 0;
+    margin-bottom: 22px;
+  }
+  #wbds-root .wbds-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--rose-deep);
+    margin: 0 0 4px;
+  }
+  #wbds-root .wbds-title {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(30px, 6vw, 46px);
+    letter-spacing: 0.01em;
+    margin: 0;
+    line-height: 1;
+    transform: rotate(-1.2deg);
+  }
+  #wbds-root .wbds-title em {
+    font-style: normal;
+    color: var(--rose);
+  }
+  #wbds-root .wbds-subtitle {
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 16.5px;
+    color: var(--ink-soft);
+    margin: 10px 0 0;
+  }
+
+  /* ---------- Step rail (classifieds-style numbering) ---------- */
+  #wbds-root .wbds-rail {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 34px;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  #wbds-root .wbds-rail-item {
+    padding: 6px 10px;
+    color: var(--ink-faint);
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+  }
+  #wbds-root .wbds-rail-item.active {
+    color: var(--rose-deep);
+    border-bottom-color: var(--rose);
+  }
+  #wbds-root .wbds-rail-item.done { color: var(--ink-soft); }
+
+  /* ---------- Step panels ---------- */
+  #wbds-root .wbds-step { display: none; }
+  #wbds-root .wbds-step.active { display: block; animation: wbds-rise 0.4s ease both; }
+  @keyframes wbds-rise {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #wbds-root .wbds-step.active { animation: none; }
+  }
+
+  #wbds-root .wbds-step-heading {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+  #wbds-root .wbds-step-kicker {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0 0 8px;
+  }
+  #wbds-root .wbds-step-title {
+    font-family: var(--font-display);
+    font-size: clamp(24px, 4vw, 32px);
+    font-weight: 600;
+    margin: 0;
+  }
+  #wbds-root .wbds-step-desc {
+    font-style: italic;
+    color: var(--ink-soft);
+    margin: 8px auto 0;
+    max-width: 46ch;
+  }
+
+  /* ---------- Choice cards (tree / tier / frequency) ---------- */
+  #wbds-root .wbds-choices {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 560px) {
+    #wbds-root .wbds-choices { grid-template-columns: 1fr; }
+  }
+  #wbds-root .wbds-card {
+    text-align: left;
+    background: var(--cream-white);
+    border: 2.5px solid var(--ink);
+    border-radius: 14px;
+    padding: 22px 20px;
+    cursor: pointer;
+    font: inherit;
+    color: inherit;
+    position: relative;
+    box-shadow: 4px 4px 0 var(--ink);
+    transform: rotate(var(--wobble, -0.6deg));
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  }
+  #wbds-root .wbds-card:nth-child(2n) { --wobble: 0.6deg; }
+  #wbds-root .wbds-card:hover { transform: rotate(var(--wobble, -0.6deg)) translateY(-3px); }
+  #wbds-root .wbds-card:focus-visible {
+    outline: 2px solid var(--rose);
+    outline-offset: 3px;
+  }
+  #wbds-root .wbds-card.selected {
+    background: #f3e2e2;
+    box-shadow: 4px 4px 0 var(--rose);
+    border-color: var(--rose);
+  }
+  #wbds-root .wbds-card-num {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--ink-faint);
+    letter-spacing: 0.1em;
+  }
+  #wbds-root .wbds-card-name {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 600;
+    margin: 6px 0 6px;
+  }
+  #wbds-root .wbds-card-tagline {
+    font-style: italic;
+    color: var(--rose-deep);
+    font-size: 14.5px;
+    margin: 0 0 10px;
+  }
+  #wbds-root .wbds-card-blurb {
+    font-size: 14.5px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+    margin: 0;
+  }
+  #wbds-root .wbds-freq-icon { display: block; margin-bottom: 8px; }
+  #wbds-root .wbds-card-price {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--ink);
+    margin-top: 12px;
+  }
+  #wbds-root .wbds-card-list {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0 0;
+    font-size: 13.5px;
+    color: var(--ink-soft);
+  }
+  #wbds-root .wbds-card-list li { padding: 2px 0; }
+  #wbds-root .wbds-card-list li::before { content: "— "; color: var(--rose); }
+  #wbds-root .wbds-card.selected .wbds-card-num { color: var(--rose-deep); }
+
+  /* ---------- Questionnaire ---------- */
+  #wbds-root .wbds-q-list { display: flex; flex-direction: column; gap: 22px; }
+  #wbds-root .wbds-q {
+    background: var(--cream-white);
+    border: 2.5px solid var(--ink);
+    border-radius: 14px;
+    padding: 18px 20px;
+  }
+  #wbds-root .wbds-q-num {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--rose-deep);
+    letter-spacing: 0.1em;
+  }
+  #wbds-root .wbds-q-prompt {
+    font-family: var(--font-display);
+    font-size: 18px;
+    margin: 4px 0 12px;
+  }
+  #wbds-root .wbds-q input[type="text"],
+  #wbds-root .wbds-q textarea {
+    width: 100%;
+    font-family: var(--font-body);
+    font-size: 15px;
+    color: var(--ink);
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--paper-line);
+    padding: 6px 2px;
+    resize: vertical;
+  }
+  #wbds-root .wbds-q input[type="text"]:focus,
+  #wbds-root .wbds-q textarea:focus {
+    outline: none;
+    border-bottom-color: var(--rose);
+  }
+  #wbds-root .wbds-q-scale {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  #wbds-root .wbds-q-chip {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    padding: 7px 13px;
+    border: 2px solid var(--ink);
+    background: transparent;
+    cursor: pointer;
+    color: var(--ink-soft);
+    border-radius: 999px;
+  }
+  #wbds-root .wbds-q-chip.selected {
+    background: var(--rose);
+    border-color: var(--ink);
+    color: var(--cream-white);
+  }
+  #wbds-root .wbds-q-chip:focus-visible { outline: 2px solid var(--rose); outline-offset: 2px; }
+
+  /* ---------- Review / ticket stub ---------- */
+  #wbds-root .wbds-ticket {
+    position: relative;
+    background: var(--cream-white);
+    border: 2.5px solid var(--ink);
+    border-radius: 16px;
+    padding: 26px 26px 22px;
+    max-width: 480px;
+    margin: 0 auto;
+    box-shadow: 5px 5px 0 var(--ink);
+  }
+  #wbds-root .wbds-ticket::before,
+  #wbds-root .wbds-ticket::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    width: 22px;
+    height: 22px;
+    background: var(--paper);
+    border: 2.5px solid var(--ink);
+    border-radius: 50%;
+    transform: translateY(-50%);
+  }
+  #wbds-root .wbds-ticket::before { left: -13px; }
+  #wbds-root .wbds-ticket::after { right: -13px; }
+  #wbds-root .wbds-ticket-perf {
+    position: absolute;
+    left: 20px; right: 20px;
+    height: 1px;
+    border-top: 2px dashed var(--ink-faint);
+  }
+  #wbds-root .wbds-ticket-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--paper-line);
+  }
+  #wbds-root .wbds-ticket-row:last-of-type { border-bottom: none; }
+  #wbds-root .wbds-ticket-label { color: var(--ink-faint); letter-spacing: 0.06em; text-transform: uppercase; }
+  #wbds-root .wbds-ticket-value { color: var(--ink); text-align: right; }
+  #wbds-root .wbds-ticket-heading {
+    font-family: var(--font-display);
+    font-size: 24px;
+    text-align: center;
+    margin: 0 0 4px;
+  }
+  #wbds-root .wbds-ticket-sub {
+    text-align: center;
+    font-style: italic;
+    color: var(--rose-deep);
+    font-size: 13px;
+    margin: 0 0 18px;
+  }
+  #wbds-root .wbds-ticket-answers {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--paper-line);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  #wbds-root .wbds-answer-q { font-family: var(--font-mono); font-size: 10.5px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.06em; }
+  #wbds-root .wbds-answer-a { font-style: italic; color: var(--ink); font-size: 14.5px; }
+
+  /* ---------- Confirmation ---------- */
+  #wbds-root .wbds-confirm { text-align: center; }
+  #wbds-root .wbds-stamp {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--rose);
+    border: 2px solid var(--rose);
+    padding: 8px 16px;
+    border-radius: 999px;
+    transform: rotate(-3deg);
+    margin-bottom: 18px;
+  }
+
+  /* ---------- Landing hero ---------- */
+  #wbds-root .wbds-hero { text-align: center; }
+  #wbds-root .wbds-hero-kicker {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--rose-deep);
+    margin: 0 0 10px;
+  }
+  #wbds-root .wbds-hero-line {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(26px, 5vw, 38px);
+    line-height: 1.15;
+    margin: 0 0 14px;
+  }
+  #wbds-root .wbds-how {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 34px;
+    text-align: left;
+  }
+  @media (max-width: 620px) {
+    #wbds-root .wbds-how { grid-template-columns: 1fr; }
+  }
+  #wbds-root .wbds-how-item {
+    border: 2.5px solid var(--ink);
+    border-radius: 14px;
+    padding: 16px 16px 18px;
+    background: var(--cream-white);
+    box-shadow: 3px 3px 0 var(--ink);
+  }
+  #wbds-root .wbds-how-num {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--rose);
+    margin-bottom: 6px;
+  }
+  #wbds-root .wbds-how-title {
+    font-family: var(--font-display);
+    font-size: 17px;
+    margin-bottom: 6px;
+  }
+  #wbds-root .wbds-how-body {
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  /* ---------- Match card preview ---------- */
+  #wbds-root .wbds-paycard {
+    max-width: 380px;
+    margin: 22px auto 0;
+    background: var(--cream-white);
+    border: 2.5px solid var(--ink);
+    border-radius: 16px;
+    padding: 22px;
+    text-align: center;
+    box-shadow: 5px 5px 0 var(--ink);
+  }
+  #wbds-root .wbds-paycard-label {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0 0 6px;
+  }
+  #wbds-root .wbds-paycard-price {
+    font-family: var(--font-display);
+    font-size: 30px;
+    color: var(--ink);
+    margin: 0 0 16px;
+  }
+  #wbds-root .wbds-paycard-btn {
+    display: inline-block;
+    text-decoration: none;
+  }
+  #wbds-root .wbds-paycard-note {
+    font-style: italic;
+    color: var(--rose-deep);
+    font-size: 13px;
+    margin: 0;
+  }
+  #wbds-root .wbds-matchcard {
+    max-width: 380px;
+    margin: 22px auto 0;
+    background: var(--cream-white);
+    border: 2.5px solid var(--ink);
+    border-radius: 14px;
+    padding: 20px 22px;
+    text-align: center;
+    box-shadow: 4px 4px 0 var(--rose);
+  }
+  #wbds-root .wbds-matchcard-kicker {
+    font-family: var(--font-display);
+    font-size: 18px;
+    margin: 0 0 10px;
+  }
+  #wbds-root .wbds-matchcard-note {
+    font-style: italic;
+    color: var(--ink-soft);
+    font-size: 14.5px;
+    line-height: 1.55;
+    margin: 0 0 10px;
+  }
+  #wbds-root .wbds-matchcard-sign {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: var(--rose-deep);
+    margin: 0;
+  }
+
+  /* ---------- Contact fields ---------- */
+  #wbds-root .wbds-contact {
+    max-width: 480px;
+    margin: 0 auto 18px;
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  #wbds-root .wbds-contact-field {
+    flex: 1 1 180px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  #wbds-root .wbds-contact-field input {
+    font-family: var(--font-body);
+    font-size: 15px;
+    color: var(--ink);
+    background: var(--cream-white);
+    border: 2.5px solid var(--ink);
+    border-radius: 10px;
+    padding: 8px 12px;
+  }
+  #wbds-root .wbds-contact-field input:focus {
+    outline: none;
+    border-color: var(--rose);
+  }
+  #wbds-root .wbds-submit-error {
+    max-width: 480px;
+    margin: 14px auto 0;
+    text-align: center;
+    color: var(--rose-deep);
+    font-size: 13.5px;
+    font-style: italic;
+  }
+
+  /* ---------- Nav buttons ---------- */
+  #wbds-root .wbds-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 34px;
+  }
+  #wbds-root .wbds-btn {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 12px 22px;
+    border: 2.5px solid var(--ink);
+    border-radius: 999px;
+    background: var(--cream-white);
+    color: var(--ink);
+    cursor: pointer;
+    box-shadow: 3px 3px 0 var(--ink);
+    transition: background 0.15s ease, color 0.15s ease, transform 0.1s ease, box-shadow 0.1s ease;
+  }
+  #wbds-root .wbds-btn:hover { background: var(--ink); color: var(--cream-white); transform: translate(1px, 1px); box-shadow: 2px 2px 0 var(--ink); }
+  #wbds-root .wbds-btn:focus-visible { outline: 2px solid var(--rose); outline-offset: 3px; }
+  #wbds-root .wbds-btn-primary {
+    background: var(--rose);
+    border-color: var(--ink);
+    color: var(--cream-white);
+    box-shadow: 3px 3px 0 var(--ink);
+  }
+  #wbds-root .wbds-btn-primary:hover { background: var(--rose-deep); transform: translate(1px, 1px); box-shadow: 2px 2px 0 var(--ink); }
+  #wbds-root .wbds-btn[disabled] { opacity: 0.35; cursor: not-allowed; }
+  #wbds-root .wbds-btn[disabled]:hover { background: transparent; color: var(--ink); }
+  #wbds-root .wbds-btn-ghost { border-color: transparent; box-shadow: none; background: transparent; }
+  #wbds-root .wbds-btn-ghost:hover { background: transparent; color: var(--rose); transform: none; box-shadow: none; }
+
+  #wbds-root .wbds-nav-spacer { flex: 1; }
+
+  #wbds-root .wbds-footer-note {
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--ink-faint);
+    letter-spacing: 0.05em;
+    margin-top: 48px;
+  }
+</style>
+
+<div id="wbds-root">
+  <div class="wbds-shell">
+    <div class="wbds-masthead">
+      <h1 class="wbds-title">with books <em>Dating Service</em></h1>
+    </div>
+
+    <nav class="wbds-rail" id="wbds-rail" aria-label="Application progress"></nav>
+
+    <main id="wbds-steps"></main>
+
+    <p class="wbds-footer-note">with books &middot; a curated literary matchmaking agency &middot; not a bookstore, a blind date</p>
+  </div>
+</div>
+
+<script>
+(function () {
+  // ============================================================
+  // CONFIG — edit everything here. The wizard below just renders it.
+  // ============================================================
+  var CONFIG = {
+    // Paste your Formspree endpoint here after setup (see instructions below).
+    // It looks like: 'https://formspree.io/f/xxxxxxxx'
+    formspreeEndpoint: 'https://formspree.io/f/xdenqgel',
+    // Paste your 4 Stripe Payment Link URLs here (see setup instructions).
+    // Each looks like: 'https://buy.stripe.com/xxxxxxxx'
+    stripeLinks: {
+      'regular-once': 'https://buy.stripe.com/8x2bJ162R8rFeidbPO7bW01',
+      'regular-sub': 'https://buy.stripe.com/28E8wPaj75ft1vr9HG7bW00',
+      'premium-once': 'https://buy.stripe.com/dRm14n2QFazNde9f207bW04',
+      'premium-sub': 'https://buy.stripe.com/bJe8wPezn9vJca51ba7bW02'
+    },
+    trees: [
+      {
+        id: 'new',
+        num: 'No. 01',
+        name: 'The New Book Tree',
+        tagline: 'Fresh off the shelf. No history, all potential.',
+        blurb: 'Crisp spine, first read is yours. For matches who want something unmarked.'
+      },
+      {
+        id: 'used',
+        num: 'No. 02',
+        name: 'The Used Book Tree',
+        tagline: 'Someone loved this once. Now it\u2019s yours.',
+        blurb: 'Underlines, a coffee ring, maybe a name in the front cover. Books with a past.'
+      }
+    ],
+    tiers: [
+      {
+        id: 'regular',
+        num: 'No. 01',
+        name: 'Regular',
+        price: '$22',
+        tagline: 'A proper first date.',
+        includes: ['Your curated match', 'with books sticker', 'with books bookmark']
+      },
+      {
+        id: 'premium',
+        num: 'No. 02',
+        name: 'Premium',
+        price: '$50',
+        tagline: 'Comes with a little extra romance.',
+        includes: ['Your curated match', 'with books sticker', 'with books bookmark', 'A rotating creative object \u2014 zine, print, or object from a local artist']
+      }
+    ],
+    frequencies: [
+      {
+        id: 'once',
+        num: 'No. 01',
+        name: 'First Date',
+        tagline: 'One-time',
+        blurb: 'A single blind date. See where it goes.'
+      },
+      {
+        id: 'sub',
+        num: 'No. 02',
+        name: 'Going Steady',
+        tagline: 'Monthly',
+        blurb: 'A new match every month. Cancel any time \u2014 no hard feelings.'
+      }
+    ],
+    // Question types: 'text' (short line), 'textarea' (longer answer), 'scale' (chip choices)
+    questions: [
+      { id: 'type', prompt: 'What\u2019s your type?', type: 'text', placeholder: 'e.g. quiet and devastating, or loud and strange' },
+      { id: 'looking_for', prompt: 'What are you looking for right now?', type: 'textarea', placeholder: 'A mood, an escape, a distraction, a challenge\u2026' },
+      { id: 'weird', prompt: 'How weird are you willing to get?', type: 'scale', options: ['Keep it normal', 'A little strange', 'Full experimental'] },
+      { id: 'dealbreaker', prompt: 'What\u2019s a dealbreaker?', type: 'text', placeholder: 'e.g. anything with a dragon on the cover' },
+      { id: 'loved', prompt: 'What books have you loved?', type: 'textarea', placeholder: 'A few titles or authors' },
+      { id: 'hated', prompt: 'What books have you hated?', type: 'textarea', placeholder: 'No wrong answers here' },
+      { id: 'mystery_level', prompt: 'How much do you want to know about your match?', type: 'scale', options: ['Tell me nothing', 'A hint or two', 'Give me the full profile'] }
+    ],
+    // Shown as a preview of the little card that ships inside every box.
+    matchCardSample: {
+      note: 'You told us you wanted something quiet, melancholic, and emotionally devastating. We thought this one might be your type.',
+      signoff: '\u2014 with books'
+    },
+    howItWorks: [
+      { title: 'Tell us who you are', body: 'A few questions about your taste, your mood, your dealbreakers.' },
+      { title: 'We read every answer', body: 'A real person picks your book by hand. No algorithm, no guesswork.' },
+      { title: 'Your match ships', body: 'A curated book arrives with a note on exactly why we chose it.' }
+    ]
+  };
+
+  // ============================================================
+  // Wizard state + rendering
+  // ============================================================
+  var STEP_DEFS = ['landing', 'tree', 'tier', 'frequency', 'questionnaire', 'review', 'confirm'];
+  var RAIL_LABELS = { tree: 'Choose a Tree', tier: 'Choose a Tier', frequency: 'Choose a Pace', questionnaire: 'Compatibility Quiz', review: 'Review Match Request', confirm: 'Submitted' };
+
+  var state = {
+    step: 0,
+    tree: null,
+    tier: null,
+    frequency: null,
+    answers: {},
+    contact: { name: '', email: '' },
+    submitStatus: 'idle' // idle | sending | error
+  };
+
+  var railEl = document.getElementById('wbds-rail');
+  var stepsEl = document.getElementById('wbds-steps');
+
+  function renderRail() {
+    railEl.innerHTML = '';
+    var n = 0;
+    STEP_DEFS.forEach(function (key, i) {
+      if (key === 'landing' || key === 'confirm') return;
+      n += 1;
+      var item = document.createElement('span');
+      item.className = 'wbds-rail-item' + (i === state.step ? ' active' : (i < state.step ? ' done' : ''));
+      item.textContent = n + '. ' + RAIL_LABELS[key];
+      railEl.appendChild(item);
+    });
+  }
+
+  function cardHTML(item, groupField, extraInner) {
+    var selected = state[groupField] === item.id;
+    return '' +
+      '<button type="button" class="wbds-card' + (selected ? ' selected' : '') + '" data-group="' + groupField + '" data-id="' + item.id + '" aria-pressed="' + selected + '">' +
+        '<div class="wbds-card-num">' + item.num + '</div>' +
+        '<div class="wbds-card-name">' + item.name + '</div>' +
+        '<div class="wbds-card-tagline">' + item.tagline + '</div>' +
+        (extraInner || '') +
+      '</button>';
+  }
+
+  function renderStep() {
+    var key = STEP_DEFS[state.step];
+    var html = '';
+
+    if (key === 'landing') {
+      html += '<div class="wbds-hero">';
+      html += '<p class="wbds-hero-kicker">A curated literary matchmaking agency</p>';
+      html += '<h2 class="wbds-hero-line">You don\u2019t choose the book.<br>We match you with one.</h2>';
+      html += '<p class="wbds-step-desc" style="max-width:52ch;">Answer a few questions about your taste, your mood, dealbreakers and spice level. Let us \u201cjudge the book by it\u2019s cover\u201d and we\u2019ll set up your blind date \u2014 no swiping, no algorithms.</p>';
+      html += '<div class="wbds-how">';
+      CONFIG.howItWorks.forEach(function (h, i) {
+        html += '<div class="wbds-how-item"><div class="wbds-how-num">0' + (i + 1) + '</div><div class="wbds-how-title">' + h.title + '</div><p class="wbds-how-body">' + h.body + '</p></div>';
+      });
+      html += '</div></div>';
+    }
+
+    if (key === 'tree') {
+      html += '<div class="wbds-step-heading"><p class="wbds-step-kicker">Step One</p><h2 class="wbds-step-title">Which tree are you picking from?</h2><p class="wbds-step-desc">Both lead to a match. Neither is the safe choice.</p></div>';
+      html += '<div class="wbds-choices">';
+      CONFIG.trees.forEach(function (t) {
+        html += cardHTML(t, 'tree', '<p class="wbds-card-blurb">' + t.blurb + '</p>');
+      });
+      html += '</div>';
+    }
+
+    if (key === 'tier') {
+      html += '<div class="wbds-step-heading"><p class="wbds-step-kicker">Step Two</p><h2 class="wbds-step-title">How serious is this?</h2><p class="wbds-step-desc">Both come with a match. One comes with a little more.</p></div>';
+      html += '<div class="wbds-choices">';
+      CONFIG.tiers.forEach(function (t) {
+        var inner = '<ul class="wbds-card-list">' + t.includes.map(function (li) { return '<li>' + li + '</li>'; }).join('') + '</ul>' +
+          '<div class="wbds-card-price">' + t.price + (state.frequency === 'sub' ? ' / month' : '') + '</div>';
+        html += cardHTML(t, 'tier', inner);
+      });
+      html += '</div>';
+    }
+
+    if (key === 'frequency') {
+      var freqIcons = {
+        once: '<svg class="wbds-freq-icon" width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M17 8 C10 2, 2 6, 4 14 C6 20, 13 24, 17 30 C21 24, 28 20, 30 14 C32 6, 24 2, 17 8 Z" stroke="#22281f" stroke-width="2" fill="none" stroke-linejoin="round"/></svg>',
+        sub: ''
+      };
+      html += '<div class="wbds-step-heading"><p class="wbds-step-kicker">Step Three</p><h2 class="wbds-step-title">Are we keeping this casual?</h2><p class="wbds-step-desc">One blind date, or a standing one every month.</p></div>';
+      html += '<div class="wbds-choices">';
+      CONFIG.frequencies.forEach(function (f) {
+        html += cardHTML(f, 'frequency', (freqIcons[f.id] || '') + '<p class="wbds-card-blurb">' + f.blurb + '</p>');
+      });
+      html += '</div>';
+    }
+
+    if (key === 'questionnaire') {
+      html += '<div class="wbds-step-heading"><p class="wbds-step-kicker">Step Four</p><h2 class="wbds-step-title">The Compatibility Questionnaire</h2><p class="wbds-step-desc">Answer honestly. We\u2019re the ones reading it, not an algorithm.</p></div>';
+      html += '<div class="wbds-q-list">';
+      CONFIG.questions.forEach(function (q, i) {
+        html += '<div class="wbds-q"><div class="wbds-q-num">' + String(i + 1).padStart(2, '0') + '</div><div class="wbds-q-prompt">' + q.prompt + '</div>';
+        if (q.type === 'text') {
+          html += '<input type="text" data-qid="' + q.id + '" placeholder="' + (q.placeholder || '') + '" value="' + (state.answers[q.id] || '') + '">';
+        } else if (q.type === 'textarea') {
+          html += '<textarea rows="2" data-qid="' + q.id + '" placeholder="' + (q.placeholder || '') + '">' + (state.answers[q.id] || '') + '</textarea>';
+        } else if (q.type === 'scale') {
+          html += '<div class="wbds-q-scale">' + q.options.map(function (opt) {
+            var sel = state.answers[q.id] === opt;
+            return '<button type="button" class="wbds-q-chip' + (sel ? ' selected' : '') + '" data-qid="' + q.id + '" data-val="' + opt + '">' + opt + '</button>';
+          }).join('') + '</div>';
+        }
+        html += '</div>';
+      });
+      html += '</div>';
+    }
+
+    if (key === 'review') {
+      var tree = CONFIG.trees.find(function (t) { return t.id === state.tree; });
+      var tier = CONFIG.tiers.find(function (t) { return t.id === state.tier; });
+      var freq = CONFIG.frequencies.find(function (f) { return f.id === state.frequency; });
+      html += '<div class="wbds-step-heading"><p class="wbds-step-kicker">Step Five</p><h2 class="wbds-step-title">Your Match Request</h2><p class="wbds-step-desc">Here\u2019s what\u2019s heading to the matchmaker.</p></div>';
+      html += '<div class="wbds-contact">';
+      html += '<label class="wbds-contact-field"><span>Name</span><input type="text" id="wbds-contact-name" value="' + state.contact.name + '" placeholder="Your name"></label>';
+      html += '<label class="wbds-contact-field"><span>Email</span><input type="email" id="wbds-contact-email" value="' + state.contact.email + '" placeholder="you@email.com"></label>';
+      html += '</div>';
+      html += '<div class="wbds-ticket"><div class="wbds-ticket-perf" style="top:112px;"></div>';
+      html += '<h3 class="wbds-ticket-heading">Blind Date Ticket</h3><p class="wbds-ticket-sub">No refunds on chemistry</p>';
+      html += '<div class="wbds-ticket-row"><span class="wbds-ticket-label">Tree</span><span class="wbds-ticket-value">' + (tree ? tree.name : '\u2014') + '</span></div>';
+      html += '<div class="wbds-ticket-row"><span class="wbds-ticket-label">Tier</span><span class="wbds-ticket-value">' + (tier ? tier.name + ' \u00b7 ' + tier.price : '\u2014') + '</span></div>';
+      html += '<div class="wbds-ticket-row"><span class="wbds-ticket-label">Pace</span><span class="wbds-ticket-value">' + (freq ? freq.name : '\u2014') + '</span></div>';
+      html += '<div class="wbds-ticket-answers">';
+      CONFIG.questions.forEach(function (q) {
+        var a = state.answers[q.id];
+        if (a) {
+          html += '<div><div class="wbds-answer-q">' + q.prompt + '</div><div class="wbds-answer-a">\u201c' + a + '\u201d</div></div>';
+        }
+      });
+      html += '</div></div>';
+      if (state.submitStatus === 'error') {
+        html += '<p class="wbds-submit-error">Something went wrong sending your application \u2014 please try again.</p>';
+      }
+    }
+
+    if (key === 'confirm') {
+      var tierC = CONFIG.tiers.find(function (t) { return t.id === state.tier; });
+      var freqC = CONFIG.frequencies.find(function (f) { return f.id === state.frequency; });
+      var stripeUrl = buildStripeUrl(state.tier, state.frequency, state.contact.email);
+      html += '<div class="wbds-confirm"><div class="wbds-stamp">Application Received</div>';
+      html += '<h2 class="wbds-step-title">One last step.</h2>';
+      html += '<p class="wbds-step-desc">Your application is in. Complete payment below to lock in your match \u2014 we start picking as soon as it clears.</p>';
+      html += '<div class="wbds-paycard">';
+      html += '<p class="wbds-paycard-label">' + (tierC ? tierC.name : '') + ' \u00b7 ' + (freqC ? freqC.name : '') + '</p>';
+      html += '<p class="wbds-paycard-price">' + (tierC ? tierC.price : '') + (state.frequency === 'sub' ? ' / month' : '') + '</p>';
+      if (stripeUrl) {
+        html += '<a class="wbds-btn wbds-btn-primary wbds-paycard-btn" href="' + stripeUrl + '" target="_blank" rel="noopener">Complete Payment \u2192</a>';
+      } else {
+        html += '<p class="wbds-paycard-note">Payment link not configured yet.</p>';
+      }
+      html += '</div>';
+      html += '<p class="wbds-step-desc" style="margin-top:22px;">Every match ships with a little note like this one:</p>';
+      html += '<div class="wbds-matchcard">';
+      html += '<p class="wbds-matchcard-kicker">Why We Matched You</p>';
+      html += '<p class="wbds-matchcard-note">\u201c' + CONFIG.matchCardSample.note + '\u201d</p>';
+      html += '<p class="wbds-matchcard-sign">' + CONFIG.matchCardSample.signoff + '</p>';
+      html += '</div></div>';
+    }
+
+    stepsEl.innerHTML = '<div class="wbds-step active">' + html + '</div>';
+    bindStepEvents(key);
+    renderNav(key);
+    renderRail();
+    railEl.style.display = (key === 'landing' || key === 'confirm') ? 'none' : 'flex';
+  }
+
+  function bindStepEvents(key) {
+    stepsEl.querySelectorAll('.wbds-card[data-group]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        state[btn.getAttribute('data-group')] = btn.getAttribute('data-id');
+        renderStep();
+      });
+    });
+    if (key === 'questionnaire') {
+      stepsEl.querySelectorAll('input[data-qid], textarea[data-qid]').forEach(function (el) {
+        el.addEventListener('input', function () {
+          state.answers[el.getAttribute('data-qid')] = el.value;
+        });
+      });
+      stepsEl.querySelectorAll('.wbds-q-chip[data-qid]').forEach(function (chip) {
+        chip.addEventListener('click', function () {
+          state.answers[chip.getAttribute('data-qid')] = chip.getAttribute('data-val');
+          renderStep();
+        });
+      });
+    }
+    if (key === 'review') {
+      var nameEl = document.getElementById('wbds-contact-name');
+      var emailEl = document.getElementById('wbds-contact-email');
+      if (nameEl) nameEl.addEventListener('input', function () { state.contact.name = nameEl.value; });
+      if (emailEl) emailEl.addEventListener('input', function () { state.contact.email = emailEl.value; });
+    }
+  }
+
+  function buildStripeUrl(tierId, freqId, email) {
+    if (!tierId || !freqId) return null;
+    var key = tierId + '-' + freqId;
+    var base = CONFIG.stripeLinks[key];
+    if (!base || base.indexOf('YOUR_') !== -1) return null;
+    var params = [];
+    if (email) {
+      params.push('prefilled_email=' + encodeURIComponent(email));
+      params.push('client_reference_id=' + encodeURIComponent(email));
+    }
+    return params.length ? base + '?' + params.join('&') : base;
+  }
+
+  function canAdvance() {
+    var key = STEP_DEFS[state.step];
+    if (key === 'landing') return true;
+    if (key === 'tree') return !!state.tree;
+    if (key === 'tier') return !!state.tier;
+    if (key === 'frequency') return !!state.frequency;
+    if (key === 'review') return !!(state.contact.name.trim() && state.contact.email.trim());
+    return true;
+  }
+
+  function submitApplication() {
+    var tree = CONFIG.trees.find(function (t) { return t.id === state.tree; });
+    var tier = CONFIG.tiers.find(function (t) { return t.id === state.tier; });
+    var freq = CONFIG.frequencies.find(function (f) { return f.id === state.frequency; });
+    var payload = {
+      name: state.contact.name,
+      email: state.contact.email,
+      tree: tree ? tree.name : '',
+      tier: tier ? tier.name + ' (' + tier.price + ')' : '',
+      pace: freq ? freq.name : '',
+      _subject: 'New With Books match request from ' + state.contact.name
+    };
+    CONFIG.questions.forEach(function (q) {
+      if (state.answers[q.id]) payload[q.prompt] = state.answers[q.id];
+    });
+
+    state.submitStatus = 'sending';
+    renderStep();
+
+    fetch(CONFIG.formspreeEndpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+      .then(function (res) {
+        if (!res.ok) throw new Error('Submission failed');
+        state.submitStatus = 'idle';
+        state.step += 1;
+        renderStep();
+      })
+      .catch(function () {
+        state.submitStatus = 'error';
+        renderStep();
+      });
+  }
+
+  function renderNav(key) {
+    var nav = document.createElement('div');
+    nav.className = 'wbds-nav';
+
+    if (key === 'landing') {
+      nav.innerHTML = '<div class="wbds-nav-spacer"></div><button type="button" class="wbds-btn wbds-btn-primary" id="wbds-next">Begin Your Application \u2192</button><div class="wbds-nav-spacer"></div>';
+      stepsEl.appendChild(nav);
+      document.getElementById('wbds-next').addEventListener('click', function () {
+        state.step += 1;
+        renderStep();
+      });
+      return;
+    }
+
+    if (key === 'confirm') {
+      nav.innerHTML = '<div class="wbds-nav-spacer"></div><button type="button" class="wbds-btn" id="wbds-restart">Start Another Application</button>';
+      stepsEl.appendChild(nav);
+      document.getElementById('wbds-restart').addEventListener('click', function () {
+        state = { step: 0, tree: null, tier: null, frequency: null, answers: {}, contact: { name: '', email: '' }, submitStatus: 'idle' };
+        renderStep();
+      });
+      return;
+    }
+
+    var backDisabled = state.step === 0;
+    var isReview = key === 'review';
+    var isSending = isReview && state.submitStatus === 'sending';
+    var nextLabel = isReview ? (isSending ? 'Sending\u2026' : 'Submit Application') : 'Continue \u2192';
+    nav.innerHTML =
+      '<button type="button" class="wbds-btn wbds-btn-ghost" id="wbds-back" ' + (backDisabled || isSending ? 'disabled' : '') + '>\u2190 Back</button>' +
+      '<div class="wbds-nav-spacer"></div>' +
+      '<button type="button" class="wbds-btn wbds-btn-primary" id="wbds-next">' + nextLabel + '</button>';
+    stepsEl.appendChild(nav);
+
+    document.getElementById('wbds-back').addEventListener('click', function () {
+      if (state.step > 0) { state.step -= 1; renderStep(); }
+    });
+    var nextBtn = document.getElementById('wbds-next');
+    nextBtn.disabled = !canAdvance() || isSending;
+    nextBtn.addEventListener('click', function () {
+      if (!canAdvance() || isSending) return;
+      if (isReview) {
+        submitApplication();
+      } else {
+        state.step += 1;
+        renderStep();
+      }
+    });
+  }
+
+  renderStep();
+})();
+</script>
