@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>with books \u2014 payment received</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Newsreader:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  :root {
+    --ink: #22281f;
+    --ink-soft: #4d5643;
+    --ink-faint: #85907a;
+    --paper: #e8e0c8;
+    --rose: #b8465b;
+    --rose-deep: #8a3346;
+    --cream-white: #f6f1e2;
+    --font-display: Consolas, 'JetBrains Mono', 'SFMono-Regular', Menlo, Monaco, monospace;
+    --font-body: 'Newsreader', Georgia, serif;
+    --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: var(--font-body);
+    color: var(--ink);
+    background: var(--paper);
+    background-image: radial-gradient(circle at 1px 1px, rgba(34,40,31,0.05) 1px, transparent 0);
+    background-size: 14px 14px;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .card {
+    max-width: 460px;
+    width: 100%;
+    background: var(--cream-white);
+    border: 2.5px solid var(--ink);
+    border-radius: 16px;
+    padding: 34px 30px;
+    text-align: center;
+    box-shadow: 5px 5px 0 var(--ink);
+  }
+  .stamp {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--rose);
+    border: 2px solid var(--rose);
+    padding: 8px 16px;
+    border-radius: 999px;
+    transform: rotate(-3deg);
+    margin-bottom: 18px;
+  }
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(24px, 5vw, 30px);
+    margin: 0 0 14px;
+  }
+  p {
+    font-size: 15.5px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+    margin: 0 0 12px;
+  }
+  .matchcard {
+    margin-top: 22px;
+    background: var(--paper);
+    border: 2px dashed var(--ink-faint);
+    border-radius: 12px;
+    padding: 16px 18px;
+  }
+  .matchcard p {
+    font-style: italic;
+    font-size: 14px;
+    margin: 0;
+    color: var(--ink-soft);
+  }
+  a.home {
+    display: inline-block;
+    margin-top: 24px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--rose-deep);
+    text-decoration: none;
+    border-bottom: 1px solid var(--rose-deep);
+    padding-bottom: 2px;
+  }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="stamp">Payment Confirmed</div>
+    <h1>You're officially matched.</h1>
+    <p>Your payment went through and your application is locked in. We're reading your answers now and getting you matched up.</p>
+    <p>Keep an eye on your inbox: we'll email you when your match ships, along with tracking.</p>
+    <div class="matchcard">
+      <p>Every book ships with a little note on exactly why we picked it for you.</p>
+    </div>
+    <a class="home" href="https://withbooksmiami.com">\u2190 Back to with books</a>
+  </div>
+</body>
+</html>
